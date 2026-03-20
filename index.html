@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect fill='%231a1a2e' width='180' height='180' rx='36'/><text x='90' y='115' text-anchor='middle' font-size='100'>⚡</text></svg>">
+<title>Pok&eacute;mon Card Show</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1a2e;--surface:#16213e;--card:#0f3460;
+  --high:#e94560;--mid:#f5a623;--budget:#2ecc71;
+  --text:#e8e8e8;--text-dim:#8899aa;--accent:#00d4ff;
+  --bought:#2a4a2a;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;background:var(--bg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  padding-top:calc(100px + var(--safe-top));
+  padding-bottom:calc(80px + var(--safe-bottom));
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none}
+
+/* === STICKY HEADER === */
+.header{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:linear-gradient(180deg,#0d1b2a 0%,#1b2838 100%);
+  padding:calc(8px + var(--safe-top)) 16px 10px;
+  border-bottom:2px solid var(--accent);
+  box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.header h1{font-size:1.1rem;text-align:center;color:var(--accent);
+  letter-spacing:1px;margin-bottom:6px}
+.budget-bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.budget-spent{font-size:1.4rem;font-weight:700;color:#fff}
+.budget-spent span{color:var(--accent)}
+.budget-count{font-size:.85rem;color:var(--text-dim)}
+.budget-limit{font-size:.75rem;color:var(--text-dim);cursor:pointer;text-decoration:underline;
+  text-decoration-style:dotted}
+.budget-limit:hover{color:var(--accent)}
+.header-actions{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.reset-btn{font-size:.7rem;color:var(--text-dim);background:none;border:1px solid #2a3a4a;
+  padding:3px 8px;border-radius:6px;cursor:pointer;opacity:.6}
+.reset-btn:active{opacity:1;border-color:var(--high);color:var(--high)}
+.progress-track{flex:1;height:6px;background:#2a3a4a;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--budget));
+  border-radius:3px;transition:width .3s ease,background .3s ease}
+.progress-fill.warn{background:linear-gradient(90deg,var(--mid),#e8960a)}
+.progress-fill.danger{background:linear-gradient(90deg,var(--high),#c0392b)}
+@keyframes pulse-danger{0%,100%{opacity:1}50%{opacity:.7}}
+.progress-fill.over{background:var(--high);animation:pulse-danger 1s infinite}
+
+/* === HOMESCREEN BANNER === */
+.homescreen-banner{position:fixed;bottom:0;left:0;right:0;z-index:150;
+  background:linear-gradient(180deg,#1b2838,#0d1b2a);
+  padding:14px 16px calc(14px + var(--safe-bottom));
+  border-top:1px solid var(--accent);
+  display:flex;align-items:center;gap:10px;
+  transform:translateY(100%);transition:transform .3s ease}
+.homescreen-banner.visible{transform:translateY(0)}
+.homescreen-banner .msg{flex:1;font-size:.82rem;color:var(--text)}
+.homescreen-banner .msg b{color:var(--accent)}
+.homescreen-banner .dismiss{background:none;border:1px solid #2a3a4a;color:var(--text-dim);
+  padding:6px 12px;border-radius:8px;font-size:.75rem;cursor:pointer;flex-shrink:0}
+
+/* === CONFIRM MODAL (reset/budget) === */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;
+  background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity .15s}
+.confirm-overlay.visible{opacity:1;pointer-events:auto}
+.confirm-modal{background:#1b2838;border-radius:16px;padding:24px;width:100%;max-width:320px;
+  border:2px solid var(--accent);text-align:center}
+.confirm-modal h3{color:var(--accent);font-size:1rem;margin-bottom:12px}
+.confirm-modal p{color:var(--text-dim);font-size:.85rem;margin-bottom:16px}
+.confirm-modal .btn-row{display:flex;gap:10px}
+.confirm-modal .btn{flex:1;padding:12px;border-radius:10px;border:none;font-size:.9rem;
+  font-weight:600;cursor:pointer}
+.confirm-modal .btn-danger{background:var(--high);color:#fff}
+.confirm-modal .btn-cancel{background:#2a3a4a;color:var(--text-dim)}
+.confirm-modal input{width:100%;padding:14px;border-radius:10px;border:2px solid #2a3a4a;
+  background:var(--surface);color:#fff;font-size:1.4rem;font-weight:700;text-align:center;
+  outline:none;-webkit-appearance:none;margin-bottom:12px}
+.confirm-modal input:focus{border-color:var(--accent)}
+
+/* === SEALED / RARITY REFERENCE === */
+.sealed{background:var(--surface);margin:12px;border-radius:12px;overflow:hidden;
+  border:1px solid #2a3a4a}
+.sealed-toggle{width:100%;padding:14px 16px;background:none;border:none;
+  color:var(--accent);font-size:.95rem;font-weight:600;text-align:left;
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.sealed-toggle::after{content:'▼';font-size:.7rem;transition:transform .2s}
+.sealed.open .sealed-toggle::after{transform:rotate(180deg)}
+.sealed-body{display:none;padding:0 16px 14px}
+.sealed.open .sealed-body{display:block}
+.sealed-item{display:flex;justify-content:space-between;padding:6px 0;
+  border-bottom:1px solid #1a2a3a;font-size:.85rem}
+.sealed-item:last-child{border-bottom:none}
+.sealed-item .label{color:var(--text-dim)}
+.sealed-item .price{color:var(--budget);font-weight:600}
+.sealed-warn{font-size:.8rem;color:var(--high);padding-top:8px;font-style:italic}
+.rarity-name{color:var(--accent);font-weight:600}
+.rarity-desc{color:var(--text);font-size:.82rem}
+.rarity-price{color:var(--budget);font-size:.78rem;font-weight:600}
+
+/* === SEARCH BAR === */
+.search-bar{margin:12px;position:relative}
+.search-bar input{width:100%;padding:10px 14px 10px 36px;border-radius:10px;border:1px solid #2a3a4a;
+  background:var(--surface);color:var(--text);font-size:.9rem;outline:none}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar input::placeholder{color:var(--text-dim)}
+.search-bar::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:.85rem;pointer-events:none}
+
+/* === POKEMON SECTIONS === */
+.pokemon-section{margin:8px 12px}
+
+/* Collapsible header */
+.pokemon-header{display:flex;align-items:center;gap:8px;padding:12px 10px;
+  border-radius:10px;background:var(--surface);cursor:pointer;
+  border:1px solid #2a3a4a;transition:all .15s}
+.pokemon-header:active{transform:scale(.98)}
+.pokemon-header .chevron{font-size:.7rem;color:var(--text-dim);transition:transform .2s;flex-shrink:0}
+.pokemon-section.open .pokemon-header .chevron{transform:rotate(90deg)}
+.pokemon-header .emoji{font-size:1.4rem}
+.pokemon-header .name{font-size:1rem;font-weight:700;color:#fff;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pokemon-header .warn{font-size:.65rem;color:var(--high);max-width:40%;text-align:right;
+  display:none}
+.pokemon-section.open .pokemon-header .warn{display:block}
+.pokemon-header .progress-badge{font-size:.72rem;color:var(--text-dim);flex-shrink:0;
+  background:#1a2a3a;padding:3px 8px;border-radius:10px}
+.pokemon-header .progress-badge.done{color:var(--budget);background:#1a3a2a}
+
+/* Cards container */
+.pokemon-cards{display:none;padding-top:8px}
+.pokemon-section.open .pokemon-cards{display:block}
+
+/* Bonus section divider */
+.bonus-divider{margin:20px 12px 8px;padding:8px 14px;
+  background:linear-gradient(90deg,#2a1a3a,#1a2a3a);border-radius:10px;
+  border:1px solid #3a2a4a;text-align:center;
+  font-size:.85rem;color:#e8a0ff;font-weight:600}
+
+/* === CARD === */
+.card{display:flex;gap:12px;padding:10px;margin-bottom:8px;
+  background:var(--surface);border-radius:12px;
+  border:2px solid transparent;transition:all .2s ease;
+  cursor:pointer;position:relative;overflow:hidden}
+.card.bought{background:var(--bought);border-color:var(--budget);opacity:.75}
+.card.bought .card-img{filter:brightness(.7)}
+.card.bought::after{content:'✓';position:absolute;top:8px;right:10px;
+  font-size:1.8rem;color:var(--budget);font-weight:700}
+.card:active{transform:scale(.98)}
+.card-img{width:80px;height:112px;border-radius:6px;object-fit:cover;
+  background:#0a1628;flex-shrink:0}
+.card-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  min-width:0}
+.card-name{font-size:.9rem;font-weight:600;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-set{font-size:.75rem;color:var(--text-dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-note{font-size:.72rem;color:var(--mid);font-style:italic;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.tier-price{display:flex;align-items:center;gap:6px;margin-top:2px}
+.tier-badge{font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.tier-badge.high{background:var(--high);color:#fff}
+.tier-badge.mid{background:var(--mid);color:#1a1a2e}
+.tier-badge.budget{background:var(--budget);color:#1a1a2e}
+.card-price{font-size:.95rem;font-weight:700;color:#fff}
+
+/* === SEARCH / FILTER === */
+.filter-bar{display:flex;gap:6px;margin:0 12px 4px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:6px 12px;border-radius:20px;border:1px solid #2a3a4a;
+  background:var(--surface);color:var(--text-dim);font-size:.8rem;cursor:pointer;
+  transition:all .15s}
+.filter-btn.active{background:var(--accent);color:#1a1a2e;border-color:var(--accent);font-weight:600}
+.expand-btn{margin-left:auto;padding:5px 10px;border-radius:8px;border:1px solid #2a3a4a;
+  background:none;color:var(--text-dim);font-size:.72rem;cursor:pointer}
+.reorder-btn{padding:5px 10px;border-radius:8px;border:1px solid #2a3a4a;
+  background:none;color:var(--text-dim);font-size:.72rem;cursor:pointer}
+.reorder-btn.active{border-color:var(--mid);color:var(--mid)}
+
+/* Reorder controls */
+.reorder-controls{display:none;flex-shrink:0;gap:4px;margin-left:4px}
+.reorder-mode .reorder-controls{display:flex}
+.reorder-controls button{width:32px;height:32px;border-radius:8px;border:1px solid #2a3a4a;
+  background:var(--surface);color:var(--accent);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.reorder-controls button:active{background:var(--accent);color:#1a1a2e}
+.reorder-mode .pokemon-header{border-color:var(--mid);border-style:dashed}
+.reorder-mode .pokemon-cards{display:none !important}
+
+/* === JUMP TO TOP === */
+.jump-top{position:fixed;bottom:calc(20px + var(--safe-bottom));right:16px;z-index:99;
+  width:44px;height:44px;border-radius:50%;border:none;
+  background:var(--accent);color:#1a1a2e;font-size:1.2rem;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.jump-top.visible{opacity:1;pointer-events:auto}
+
+/* === PRICE MODAL === */
+.price-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;
+  background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity .15s}
+.price-overlay.visible{opacity:1;pointer-events:auto}
+.price-modal{background:#1b2838;border-radius:16px;padding:24px;width:100%;max-width:320px;
+  border:2px solid var(--accent);text-align:center}
+.price-modal h3{color:var(--accent);font-size:1rem;margin-bottom:4px}
+.price-modal .card-label{color:var(--text-dim);font-size:.85rem;margin-bottom:16px}
+.price-modal .target{color:var(--text-dim);font-size:.78rem;margin-bottom:12px}
+.price-modal input{width:100%;padding:14px;border-radius:10px;border:2px solid #2a3a4a;
+  background:var(--surface);color:#fff;font-size:1.4rem;font-weight:700;text-align:center;
+  outline:none;-webkit-appearance:none}
+.price-modal input:focus{border-color:var(--accent)}
+.price-modal .btn-row{display:flex;gap:10px;margin-top:16px}
+.price-modal .btn{flex:1;padding:12px;border-radius:10px;border:none;font-size:.9rem;
+  font-weight:600;cursor:pointer}
+.price-modal .btn-confirm{background:var(--budget);color:#1a1a2e}
+.price-modal .btn-cancel{background:#2a3a4a;color:var(--text-dim)}
+.price-modal .btn-unbuy{background:var(--high);color:#fff;margin-top:8px;width:100%;
+  padding:10px;border-radius:10px;border:none;font-size:.8rem;cursor:pointer}
+
+/* === BOTTOM SPACER === */
+.bottom-spacer{height:20px}
+.loading{text-align:center;padding:40px;color:var(--text-dim)}
+
+@media(min-width:500px){
+  body{max-width:480px;margin:0 auto}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ Pok&eacute;mon Card Show ⚡</h1>
+  <div class="budget-bar">
+    <div class="budget-spent">$<span id="totalSpent">0</span><span id="budgetCap"></span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="budget-count"><span id="boughtCount">0</span>/<span id="totalCount">0</span> cards</div>
+  </div>
+  <div class="header-actions">
+    <span class="budget-limit" onclick="openBudgetModal()">Set Budget</span>
+    <button class="reset-btn" onclick="openResetModal()">Reset All</button>
+  </div>
+</div>
+
+<div id="app"></div>
+<div class="bottom-spacer"></div>
+
+<button class="jump-top" id="jumpTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- Reset confirmation modal -->
+<div class="confirm-overlay" id="resetOverlay" onclick="if(event.target===this)closeResetModal()">
+  <div class="confirm-modal">
+    <h3>Reset All Purchases?</h3>
+    <p>This will clear all checked-off cards and spending data. This can't be undone.</p>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeResetModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReset()">Reset All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget modal -->
+<div class="confirm-overlay" id="budgetOverlay" onclick="if(event.target===this)closeBudgetModal()">
+  <div class="confirm-modal">
+    <h3>Set Budget Limit</h3>
+    <p>Get warned as you approach your spending limit.</p>
+    <input type="number" id="budgetInput" inputmode="decimal" placeholder="e.g. 100" step="1" min="0"
+      onkeydown="if(event.key==='Enter')confirmBudget()">
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="clearBudget()">No Limit</button>
+      <button class="btn btn-confirm" style="background:var(--accent);color:#1a1a2e" onclick="confirmBudget()">Set</button>
+    </div>
+  </div>
+</div>
+
+<!-- Homescreen banner -->
+<div class="homescreen-banner" id="homescreenBanner">
+  <div class="msg">Add to <b>Home Screen</b> for quick access at the show</div>
+  <button class="dismiss" onclick="dismissHomescreenBanner()">Got it</button>
+</div>
+
+<div class="price-overlay" id="priceOverlay" onclick="if(event.target===this)closePriceModal()">
+  <div class="price-modal">
+    <h3 id="modalTitle">Bought!</h3>
+    <div class="card-label" id="modalCardName"></div>
+    <div class="target" id="modalTarget"></div>
+    <input type="number" id="priceInput" inputmode="decimal" placeholder="0.00" step="0.01" min="0"
+      onkeydown="if(event.key==='Enter')confirmPurchase()">
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closePriceModal()">Cancel</button>
+      <button class="btn btn-confirm" onclick="confirmPurchase()">Confirm</button>
+    </div>
+    <button class="btn-unbuy" id="unbuyBtn" style="display:none" onclick="unbuyCard()">Remove Purchase</button>
+  </div>
+</div>
+
+<script src="cards.js"></script>
+<script>
+// ===== STATE =====
+// bought stores either true (legacy) or a number (actual price paid)
+let bought = JSON.parse(localStorage.getItem('pokeBought') || '{}');
+let openSections = JSON.parse(sessionStorage.getItem('pokeOpen') || '{}');
+let budgetLimit = JSON.parse(localStorage.getItem('pokeBudget') || 'null');
+let filter = 'all';
+let searchQuery = '';
+let reorderMode = false;
+let pendingPi = null, pendingCi = null;
+
+// ===== CUSTOM ORDER (name-based for stability) =====
+// Stored as array of Pokemon names. Migrates from old index-based format.
+let customOrder = (function() {
+  const raw = JSON.parse(localStorage.getItem('pokeOrder') || 'null');
+  if (!raw) return null;
+  // Migrate: if old format (array of numbers), convert to names
+  if (raw.length > 0 && typeof raw[0] === 'number') {
+    const names = raw.map(i => POKEMON[i] ? POKEMON[i].name : null).filter(Boolean);
+    localStorage.setItem('pokeOrder', JSON.stringify(names));
+    return names;
+  }
+  return raw;
+})();
+
+function getOrderedIndices() {
+  if (!customOrder) return POKEMON.map((_, i) => i);
+  // Map names back to current indices
+  const nameToIdx = {};
+  POKEMON.forEach((p, i) => { nameToIdx[p.name] = i; });
+  const ordered = [];
+  const used = new Set();
+  customOrder.forEach(name => {
+    if (nameToIdx[name] !== undefined && !used.has(nameToIdx[name])) {
+      ordered.push(nameToIdx[name]);
+      used.add(nameToIdx[name]);
+    }
+  });
+  // Append any new Pokemon not in saved order
+  POKEMON.forEach((_, i) => {
+    if (!used.has(i)) ordered.push(i);
+  });
+  return ordered;
+}
+
+function cardId(pi, ci) { return pi + '-' + ci; }
+
+function save() {
+  localStorage.setItem('pokeBought', JSON.stringify(bought));
+}
+
+function saveOpen() {
+  sessionStorage.setItem('pokeOpen', JSON.stringify(openSections));
+}
+
+function getPaidPrice(pi, ci) {
+  const val = bought[cardId(pi, ci)];
+  if (val === undefined || val === false) return 0;
+  if (val === true) return (POKEMON[pi].cards[ci].price[0] + POKEMON[pi].cards[ci].price[1]) / 2;
+  return Number(val);
+}
+
+function getStats() {
+  let spent = 0, count = 0, total = 0;
+  POKEMON.forEach((p, pi) => {
+    p.cards.forEach((c, ci) => {
+      total++;
+      if (bought[cardId(pi, ci)]) {
+        count++;
+        spent += getPaidPrice(pi, ci);
+      }
+    });
+  });
+  return { spent, count, total };
+}
+
+function getSectionStats(pi) {
+  const p = POKEMON[pi];
+  let count = 0;
+  p.cards.forEach((c, ci) => {
+    if (bought[cardId(pi, ci)]) count++;
+  });
+  return { bought: count, total: p.cards.length };
+}
+
+function updateHeader() {
+  const s = getStats();
+  document.getElementById('totalSpent').textContent = s.spent.toFixed(2);
+  document.getElementById('boughtCount').textContent = s.count;
+  document.getElementById('totalCount').textContent = s.total;
+
+  const fill = document.getElementById('progressFill');
+  const capEl = document.getElementById('budgetCap');
+
+  if (budgetLimit && budgetLimit > 0) {
+    const pct = Math.min((s.spent / budgetLimit) * 100, 100);
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill' +
+      (s.spent > budgetLimit ? ' over' : pct >= 90 ? ' danger' : pct >= 75 ? ' warn' : '');
+    capEl.textContent = ' / $' + budgetLimit;
+  } else {
+    const pct = s.total ? (s.count / s.total * 100) : 0;
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill';
+    capEl.textContent = '';
+  }
+}
+
+function toggleCard(pi, ci) {
+  pendingPi = pi;
+  pendingCi = ci;
+  const id = cardId(pi, ci);
+  const c = POKEMON[pi].cards[ci];
+  const alreadyBought = !!bought[id];
+
+  document.getElementById('modalCardName').textContent = c.name;
+  document.getElementById('modalTarget').textContent = 'Target: ' + formatPrice(c.price);
+
+  const input = document.getElementById('priceInput');
+  const unbuyBtn = document.getElementById('unbuyBtn');
+
+  if (alreadyBought) {
+    document.getElementById('modalTitle').textContent = 'Update Price';
+    const current = getPaidPrice(pi, ci);
+    input.value = current > 0 ? current.toFixed(2) : '';
+    unbuyBtn.style.display = 'block';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Bought!';
+    const avg = (c.price[0] + c.price[1]) / 2;
+    input.value = avg.toFixed(2);
+    unbuyBtn.style.display = 'none';
+  }
+
+  document.getElementById('priceOverlay').classList.add('visible');
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+
+function confirmPurchase() {
+  const input = document.getElementById('priceInput');
+  const price = parseFloat(input.value) || 0;
+  const id = cardId(pendingPi, pendingCi);
+  bought[id] = price;
+  save();
+  closePriceModal();
+  render();
+}
+
+function unbuyCard() {
+  const id = cardId(pendingPi, pendingCi);
+  delete bought[id];
+  save();
+  closePriceModal();
+  render();
+}
+
+function closePriceModal() {
+  document.getElementById('priceOverlay').classList.remove('visible');
+  pendingPi = null;
+  pendingCi = null;
+}
+
+function toggleReorder() {
+  reorderMode = !reorderMode;
+  render();
+}
+
+function moveSection(orderIdx, direction) {
+  const order = getOrderedIndices().slice();
+  const newIdx = orderIdx + direction;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  [order[orderIdx], order[newIdx]] = [order[newIdx], order[orderIdx]];
+  // Save as names for stability across data changes
+  customOrder = order.map(i => POKEMON[i].name);
+  localStorage.setItem('pokeOrder', JSON.stringify(customOrder));
+  render();
+  setTimeout(() => {
+    const sections = document.querySelectorAll('.pokemon-section');
+    if (sections[newIdx]) sections[newIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+}
+
+function toggleSection(pi) {
+  openSections[pi] = !openSections[pi];
+  saveOpen();
+  render();
+}
+
+function expandAll() {
+  const allOpen = POKEMON.every((_, pi) => openSections[pi]);
+  POKEMON.forEach((_, pi) => { openSections[pi] = !allOpen; });
+  saveOpen();
+  render();
+}
+
+function formatPrice(p) {
+  if (p[0] === p[1]) return '$' + p[0].toFixed(2).replace(/\.00$/, '');
+  return '$' + p[0].toFixed(2).replace(/\.00$/, '') + ' – $' + p[1].toFixed(2).replace(/\.00$/, '');
+}
+
+function setFilter(f) {
+  filter = f;
+  render();
+}
+
+function onSearch(val) {
+  searchQuery = val.toLowerCase().trim();
+  render();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+
+  // Sealed product reference
+  html += `
+  <div class="sealed" id="sealedSection">
+    <button class="sealed-toggle" onclick="document.getElementById('sealedSection').classList.toggle('open')">
+      📦 Sealed Product Quick Reference
+    </button>
+    <div class="sealed-body">
+      <div class="sealed-item"><span class="label">Booster Pack (single)</span><span class="price">$3.50 – $4.00</span></div>
+      <div class="sealed-item"><span class="label">Booster Bundle (6 packs)</span><span class="price">$20 – $23</span></div>
+      <div class="sealed-item"><span class="label">Elite Trainer Box</span><span class="price">$35 – $40</span></div>
+      <div class="sealed-warn">💰 Always offer cash! Avoid Evolving Skies, 151, and Paldean Fates (premium prices).</div>
+    </div>
+  </div>`;
+
+  // Rarity dictionary
+  html += `
+  <div class="sealed" id="raritySection">
+    <button class="sealed-toggle" onclick="document.getElementById('raritySection').classList.toggle('open')">
+      📖 Rarity Dictionary
+    </button>
+    <div class="sealed-body">
+      <div class="sealed-item" style="flex-direction:column;gap:2px">
+        <div><span class="rarity-name">Holo (Holographic)</span></div>
+        <div class="rarity-desc">The Pokémon picture is shiny, rest of the card is normal.</div>
+        <div class="rarity-price">$0.25 – $1.00</div>
+      </div>
+      <div class="sealed-item" style="flex-direction:column;gap:2px">
+        <div><span class="rarity-name">Reverse Holo</span></div>
+        <div class="rarity-desc">Opposite of Holo — entire card is shiny except the Pokémon picture.</div>
+        <div class="rarity-price">$0.25 – $1.00</div>
+      </div>
+      <div class="sealed-item" style="flex-direction:column;gap:2px">
+        <div><span class="rarity-name">V / ex / VSTAR / VMAX</span></div>
+        <div class="rarity-desc">Modern "Ultra Rares." Completely shiny, silver borders, Pokémon pops out of the frame.</div>
+        <div class="rarity-price">$1.00 – $5.00</div>
+      </div>
+      <div class="sealed-item" style="flex-direction:column;gap:2px">
+        <div><span class="rarity-name">Full Art</span></div>
+        <div class="rarity-desc">Artwork covers the entire card, but background is usually a solid textured color.</div>
+        <div class="rarity-price">$3.00 – $25.00</div>
+      </div>
+      <div class="sealed-item" style="flex-direction:column;gap:2px">
+        <div><span class="rarity-name">IR (Illustration Rare) / TG (Trainer Gallery)</span></div>
+        <div class="rarity-desc">Full card with a beautiful detailed scene — like a watercolor painting or Pokémon with its trainer.</div>
+        <div class="rarity-price">$3.00 – $30.00</div>
+      </div>
+      <div class="sealed-item" style="flex-direction:column;gap:2px;border-bottom:none">
+        <div><span class="rarity-name">SIR (Special Illustration Rare) / Alt Art</span></div>
+        <div class="rarity-desc">The rarest modern cards. Complex artwork, heavy texture, massive collector demand.</div>
+        <div class="rarity-price" style="color:var(--high)">$40.00 – $200+</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Search bar
+  html += `
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search Pokémon, cards, sets..." value="${searchQuery}" oninput="onSearch(this.value)">
+  </div>`;
+
+  // Filter bar + expand/collapse
+  const allOpen = POKEMON.every((_, pi) => openSections[pi]);
+  html += `
+  <div class="filter-bar">
+    <button class="filter-btn ${filter==='all'?'active':''}" data-filter="all" onclick="setFilter('all')">All</button>
+    <button class="filter-btn ${filter==='high'?'active':''}" data-filter="high" onclick="setFilter('high')">High End</button>
+    <button class="filter-btn ${filter==='mid'?'active':''}" data-filter="mid" onclick="setFilter('mid')">Mid-Tier</button>
+    <button class="filter-btn ${filter==='budget'?'active':''}" data-filter="budget" onclick="setFilter('budget')">Budget</button>
+    <button class="filter-btn ${filter==='remaining'?'active':''}" data-filter="remaining" onclick="setFilter('remaining')">Remaining</button>
+    <button class="expand-btn" onclick="expandAll()">${allOpen ? 'Collapse All' : 'Expand All'}</button>
+    <button class="reorder-btn ${reorderMode ? 'active' : ''}" onclick="toggleReorder()">${reorderMode ? '✓ Done' : '↕ Reorder'}</button>
+  </div>`;
+
+  // Pokémon sections (in custom order)
+  const order = getOrderedIndices();
+
+  order.forEach((pi, orderIdx) => {
+    const p = POKEMON[pi];
+
+    // Search filter — matches Pokemon name, card name, set name, and notes
+    const nameMatch = !searchQuery || p.name.toLowerCase().includes(searchQuery);
+    const cardMatches = searchQuery ? p.cards.some(c =>
+      c.name.toLowerCase().includes(searchQuery) ||
+      c.set.toLowerCase().includes(searchQuery) ||
+      (c.note && c.note.toLowerCase().includes(searchQuery))
+    ) : false;
+    if (searchQuery && !nameMatch && !cardMatches) return;
+
+    const filteredCards = p.cards.filter((c, ci) => {
+      // When searching by card-level match, only show matching cards
+      if (searchQuery && !nameMatch && cardMatches) {
+        const cardMatch = c.name.toLowerCase().includes(searchQuery) ||
+          c.set.toLowerCase().includes(searchQuery) ||
+          (c.note && c.note.toLowerCase().includes(searchQuery));
+        if (!cardMatch) return false;
+      }
+      if (filter === 'remaining') return !bought[cardId(pi, ci)];
+      if (filter !== 'all') return c.tier === filter;
+      return true;
+    });
+    if (filteredCards.length === 0 && (filter !== 'all' || searchQuery)) return;
+
+    const stats = getSectionStats(pi);
+    // Auto-expand sections when searching by card-level match
+    const isOpen = searchQuery ? true : openSections[pi];
+    const badgeClass = stats.bought === stats.total && stats.total > 0 ? 'done' : '';
+
+    html += `<div class="pokemon-section ${isOpen && !reorderMode ? 'open' : ''} ${reorderMode ? 'reorder-mode' : ''}">
+      <div class="pokemon-header" onclick="${reorderMode ? '' : 'toggleSection(' + pi + ')'}">
+        <span class="chevron">▶</span>
+        <span class="emoji">${p.emoji}</span>
+        <span class="name">${p.name}</span>
+        ${p.warn ? '<span class="warn">' + p.warn + '</span>' : ''}
+        <span class="progress-badge ${badgeClass}">${stats.bought}/${stats.total} ${stats.bought === stats.total && stats.total > 0 ? '✓' : ''}</span>
+        <span class="reorder-controls">
+          <button onclick="event.stopPropagation();moveSection(${orderIdx},-1)" ${orderIdx === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button>
+          <button onclick="event.stopPropagation();moveSection(${orderIdx},1)" ${orderIdx === order.length - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>
+        </span>
+      </div>
+      <div class="pokemon-cards">`;
+
+    filteredCards.forEach(c => {
+      const ci = p.cards.indexOf(c);
+      const id = cardId(pi, ci);
+      const isBought = bought[id];
+      html += `
+      <div class="card ${isBought ? 'bought' : ''}" onclick="toggleCard(${pi},${ci})">
+        <img class="card-img" src="${c.img}" alt="${c.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%22112%22><rect fill=%22%230a1628%22 width=%2280%22 height=%22112%22 rx=%226%22/><text x=%2240%22 y=%2256%22 fill=%22%23445566%22 text-anchor=%22middle%22 font-size=%2212%22>?</text></svg>'">
+        <div class="card-info">
+          <div class="card-name">${c.name}</div>
+          <div class="card-set">${c.set}</div>
+          ${c.note ? '<div class="card-note">' + c.note + '</div>' : ''}
+          <div class="tier-price">
+            <span class="tier-badge ${c.tier}">${c.tier === 'high' ? 'High End' : c.tier === 'mid' ? 'Mid-Tier' : 'Budget'}</span>
+            <span class="card-price">${isBought ? 'Paid $' + getPaidPrice(pi, ci).toFixed(2) : formatPrice(c.price)}</span>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+
+  app.innerHTML = html;
+  updateHeader();
+
+  // Re-focus search input if it was focused
+  if (document.activeElement && document.activeElement.tagName === 'BODY') {
+    const input = document.getElementById('searchInput');
+    if (searchQuery && input) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
+}
+
+// ===== RESET PURCHASES =====
+function openResetModal() {
+  document.getElementById('resetOverlay').classList.add('visible');
+}
+function closeResetModal() {
+  document.getElementById('resetOverlay').classList.remove('visible');
+}
+function confirmReset() {
+  bought = {};
+  save();
+  closeResetModal();
+  render();
+}
+
+// ===== BUDGET CEILING =====
+function openBudgetModal() {
+  const input = document.getElementById('budgetInput');
+  input.value = budgetLimit || '';
+  document.getElementById('budgetOverlay').classList.add('visible');
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+function closeBudgetModal() {
+  document.getElementById('budgetOverlay').classList.remove('visible');
+}
+function confirmBudget() {
+  const val = parseFloat(document.getElementById('budgetInput').value);
+  if (val > 0) {
+    budgetLimit = val;
+    localStorage.setItem('pokeBudget', JSON.stringify(budgetLimit));
+  }
+  closeBudgetModal();
+  updateHeader();
+}
+function clearBudget() {
+  budgetLimit = null;
+  localStorage.removeItem('pokeBudget');
+  closeBudgetModal();
+  updateHeader();
+}
+
+// ===== HOMESCREEN BANNER =====
+function dismissHomescreenBanner() {
+  document.getElementById('homescreenBanner').classList.remove('visible');
+  localStorage.setItem('pokeHomescreenDismissed', '1');
+}
+
+// Jump-to-top button visibility
+window.addEventListener('scroll', () => {
+  document.getElementById('jumpTop').classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+// Init
+render();
+
+// Show homescreen banner (once, after a short delay)
+if (!localStorage.getItem('pokeHomescreenDismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+  setTimeout(() => {
+    document.getElementById('homescreenBanner').classList.add('visible');
+  }, 2000);
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
