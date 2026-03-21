@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A mobile-friendly web app (designed for iPhone Safari) that Hoff and his 5-year-old daughter Sloane will use at a Pokémon TCG card show this weekend. It's a visual shopping checklist — card artwork, prices, and checkboxes.
+A mobile-friendly web app (designed for iPhone) that Hoff and his 5-year-old daughter Sloane use at Pokémon TCG card shows. It's a visual shopping checklist — card artwork, prices, and checkboxes. Deployed on Vercel, shared via GitHub.
 
 ## Who You're Working With
 
@@ -11,43 +11,52 @@ Hoff is NOT a coder. He's a creative director. Show a plan, get approval, then b
 ## The App
 
 ### What it does
-- Displays a visual checklist of Pokémon cards organized by Pokémon character
-- Each card shows: the card artwork (image), card name, set info, target price range, and a "don't pay more than" max price
-- Tap to check off a card when purchased
-- Tracks total spent vs. budget
-- Works offline (they'll be at a fairgrounds — cell signal may be spotty)
+- Displays a visual checklist of ~111 Pokémon cards organized by Pokémon character
+- Each card shows: the card artwork (image), card name, set info, target price range, and notes
+- Tap to check off a card when purchased (enter price paid)
+- Tracks total spent vs. budget with a progress bar
+- Works offline (service worker caches images and app files)
 
-### Design requirements
-- **iPhone-first (Chrome browser).** This will be used on a phone at the show. Big tap targets, easy to scroll, easy to read in bright outdoor/indoor lighting.
-- **Visual.** Sloane is 5 — she'll help spot cards by looking at the pictures. Card images should be prominent.
-- **Grouped by Pokémon.** Each character (Snorlax, Pikachu, Eevee, etc.) is a section with its High End, Mid-Tier, and Budget options listed underneath.
-- **Quick check-off.** One tap to mark a card as purchased. Show a simple total of what's been spent.
-- **Price tiers color-coded.** High End, Mid-Tier, and Budget should be visually distinct at a glance.
+### Current features
+- **Tier filters**: All, High End, Mid-Tier, Budget, Remaining (unpurchased)
+- **Type filters**: IR, Full Art, Trainer Gallery, Holo, Reverse Holo, Shiny, ex/V
+- **Combined filtering**: Tier + type filters work together (e.g. "High End" + "IR")
+- **Single scrolling pill bar**: All filters in one horizontal-scrollable row with a divider between tier and type
+- **Search**: Real-time text search across Pokémon names, card names, sets, and notes
+- **Expand/Collapse All**: Icon button (⊞/⊟) in the header
+- **Reorder sections**: Icon button (↕) in the header, drag sections to customize order
+- **Sealed Product Reference**: Collapsible quick-reference for booster pack/bundle/ETB pricing
+- **Rarity Dictionary**: Collapsible guide to card rarity types and typical prices
+- **Pokedex themes**: Toggle between Dark Dex and Light Dex via header button
+  - Dark Dex: Dark backgrounds, red accents, indicator lights
+  - Light Dex: Red Pokedex header with blue lens, cream background, white cards
 
-### Card data
-The full card list with pricing is in `card_list.txt` in this folder. It has 16 Pokémon, each with 3 tiers (High End, Mid-Tier, Budget) — roughly 48 cards total. Prices, set names, and notes are all included.
+### Design
+- **iPhone-first.** Big tap targets, one-handed operation, works in bright/dim lighting
+- **Visual.** Card images are prominent — Sloane helps spot cards by picture
+- **Grouped by Pokémon.** Each character is a collapsible section with cards underneath
+- **Price tiers color-coded.** Red (High End), Orange (Mid-Tier), Green (Budget)
+- **Pokedex aesthetic.** Red frame, indicator lights, blue lens (Light Dex), chunky borders
 
-### Card images
-Use the Pokémon TCG API (https://pokemontcg.io/) or TCGPlayer images to pull card artwork. If the API doesn't have a specific card, use a placeholder or the Pokémon's general artwork. The API is free and doesn't require authentication for basic lookups.
+### Tech stack
+- Zero dependencies, zero build step
+- Single HTML file (`index.html`) with embedded CSS and JS
+- Separate card data file (`cards.js`) — easy to update without touching app logic
+- Service worker (`sw.js`) for offline support
+- PWA manifest (`manifest.json`)
+- Deployed on Vercel: https://pokemon-cards-xi-liard.vercel.app
+- GitHub: https://github.com/hofftv/pokemon-card-show
 
-### Offline support
-Add a service worker or cache the page so it works without internet. The fairgrounds may have weak signal. All card images should be cached on first load.
+### Card data model
+Each card in `cards.js` has:
+- `tier`: "high" / "mid" / "budget"
+- `type`: "ir" / "fullart" / "tg" / "holo" / "reverseholo" / "shiny" / "exv"
+- `name`, `set`, `price` [min, max], `note` (optional), `img` (URL)
 
-### Tech approach
-Keep it simple — this is a weekend project, not a production app. A single-page HTML file with embedded CSS and JS would be totally fine. Or a simple React app. Whatever gets it done fast and works great on an iPhone. No backend needed — all data is static.
+### How to update cards
+1. Edit `cards.js` — add/remove/modify card objects
+2. Deploy: `npx vercel --yes --prod` from this folder
+3. Or push to GitHub (auto-deploys via Vercel)
 
-## Sealed Product Quick Reference
-
-Include a small reference section at the top or bottom for sealed product pricing:
-- Booster Packs: Target $3.50–$4.00 each
-- Booster Bundles (6 packs): Target $20–$23
-- Elite Trainer Boxes: Target $35–$40
-- Reminder: Always offer cash. Avoid Evolving Skies, 151, and Paldean Fates (premium prices).
-
-## Deliverable
-
-A working app that Hoff can open on his iPhone in Chrome. Either:
-1. A single HTML file he can open directly, OR
-2. A simple app deployed to Vercel (he already has an account)
-
-Either way, it needs to work on iPhone Chrome and ideally work offline.
+### How to update the service worker cache
+Bump the version number in `sw.js` (e.g. `pokemon-card-show-v5` → `v6`) to force users to get fresh files.

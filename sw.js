@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pokemon-card-show-v4';
+const CACHE_NAME = 'pokemon-card-show-v5';
 
 // Install: cache the HTML page, card data, and manifest
 self.addEventListener('install', e => {

@@ -34,7 +34,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   border-bottom:2px solid var(--accent);
   box-shadow:0 4px 20px rgba(0,0,0,.5)}
 .header h1{font-size:1.1rem;text-align:center;color:var(--accent);
-  letter-spacing:1px;margin-bottom:6px}
+  letter-spacing:1px;margin-bottom:0}
 .budget-bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .budget-spent{font-size:1.4rem;font-weight:700;color:#fff}
 .budget-spent span{color:var(--accent)}
@@ -43,6 +43,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   text-decoration-style:dotted}
 .budget-limit:hover{color:var(--accent)}
 .header-actions{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.header-icon-btn{width:28px;height:28px;border-radius:6px;border:1px solid #2a3a4a;
+  background:none;color:var(--text-dim);font-size:.9rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;opacity:.6}
+.header-icon-btn:active{opacity:1;border-color:var(--accent);color:var(--accent)}
+.header-icon-btn.active{opacity:1;border-color:var(--mid);color:var(--mid)}
 .reset-btn{font-size:.7rem;color:var(--text-dim);background:none;border:1px solid #2a3a4a;
   padding:3px 8px;border-radius:6px;cursor:pointer;opacity:.6}
 .reset-btn:active{opacity:1;border-color:var(--high);color:var(--high)}
@@ -87,12 +92,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .confirm-modal input:focus{border-color:var(--accent)}
 
 /* === SEALED / RARITY REFERENCE === */
-.sealed{background:var(--surface);margin:12px;border-radius:12px;overflow:hidden;
-  border:1px solid #2a3a4a}
-.sealed-toggle{width:100%;padding:14px 16px;background:none;border:none;
-  color:var(--accent);font-size:.95rem;font-weight:600;text-align:left;
+.ref-row{display:flex;gap:8px;margin:8px 12px}
+.sealed{background:var(--surface);border-radius:12px;overflow:hidden;
+  border:1px solid #2a3a4a;flex:1}
+.ref-row .sealed{margin:0}
+.sealed-toggle{width:100%;padding:10px 12px;background:none;border:none;
+  color:var(--accent);font-size:.8rem;font-weight:600;text-align:left;
   display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.sealed-toggle::after{content:'▼';font-size:.7rem;transition:transform .2s}
+.sealed-toggle::after{content:'▼';font-size:.6rem;transition:transform .2s}
 .sealed.open .sealed-toggle::after{transform:rotate(180deg)}
 .sealed-body{display:none;padding:0 16px 14px}
 .sealed.open .sealed-body{display:block}
@@ -107,8 +114,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .rarity-price{color:var(--budget);font-size:.78rem;font-weight:600}
 
 /* === SEARCH BAR === */
-.search-bar{margin:12px;position:relative}
-.search-bar input{width:100%;padding:10px 14px 10px 36px;border-radius:10px;border:1px solid #2a3a4a;
+.search-bar{margin:8px 12px;position:relative}
+.search-bar input{width:100%;padding:8px 14px 8px 36px;border-radius:10px;border:1px solid #2a3a4a;
   background:var(--surface);color:var(--text);font-size:.9rem;outline:none}
 .search-bar input:focus{border-color:var(--accent)}
 .search-bar input::placeholder{color:var(--text-dim)}
@@ -175,16 +182,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .card-price{font-size:.95rem;font-weight:700;color:#fff}
 
 /* === SEARCH / FILTER === */
-.filter-bar{display:flex;gap:6px;margin:0 12px 4px;flex-wrap:wrap;align-items:center}
-.filter-btn{padding:6px 12px;border-radius:20px;border:1px solid #2a3a4a;
-  background:var(--surface);color:var(--text-dim);font-size:.8rem;cursor:pointer;
-  transition:all .15s}
+.filter-bar{display:flex;gap:6px;padding:4px 12px;overflow-x:auto;flex-wrap:nowrap;
+  align-items:center;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-btn{padding:5px 11px;border-radius:20px;border:1px solid #2a3a4a;
+  background:var(--surface);color:var(--text-dim);font-size:.78rem;cursor:pointer;
+  transition:all .15s;white-space:nowrap;flex-shrink:0}
 .filter-btn.active{background:var(--accent);color:#1a1a2e;border-color:var(--accent);font-weight:600}
-.expand-btn{margin-left:auto;padding:5px 10px;border-radius:8px;border:1px solid #2a3a4a;
-  background:none;color:var(--text-dim);font-size:.72rem;cursor:pointer}
-.reorder-btn{padding:5px 10px;border-radius:8px;border:1px solid #2a3a4a;
-  background:none;color:var(--text-dim);font-size:.72rem;cursor:pointer}
-.reorder-btn.active{border-color:var(--mid);color:var(--mid)}
+.filter-divider{width:1px;height:20px;background:var(--text-dim);flex-shrink:0;opacity:.3;margin:0 2px}
 
 /* Reorder controls */
 .reorder-controls{display:none;flex-shrink:0;gap:4px;margin-left:4px}
@@ -233,12 +238,149 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 @media(min-width:500px){
   body{max-width:480px;margin:0 auto}
 }
+
+/* ========================================
+   THEME A: DARK POKEDEX
+   ======================================== */
+[data-theme="a"]{
+  --bg:#1c1c2b;--surface:#222236;--card:#2a2a40;
+  --accent:#E3350D;--text:#e8e8e8;--text-dim:#9a9ab0;
+  --bought:#2a3a2a;
+  --border:#3a3a50;--header-bg:linear-gradient(180deg,#8B0000 0%,#5C0000 100%);
+}
+[data-theme="a"] html,[data-theme="a"]{background:var(--bg)}
+[data-theme="a"] .header{background:linear-gradient(180deg,#8B0000 0%,#5C0000 100%);
+  border-bottom:3px solid #FF6B4A}
+[data-theme="a"] .header h1{color:#fff}
+[data-theme="a"] .budget-spent span{color:#FF6B4A}
+[data-theme="a"] .indicator-lights{display:flex !important}
+[data-theme="a"] .sealed{border-color:var(--border)}
+[data-theme="a"] .sealed-toggle{color:#FF6B4A}
+[data-theme="a"] .search-bar input{border-color:var(--border);background:var(--surface)}
+[data-theme="a"] .search-bar input:focus{border-color:#FF6B4A}
+[data-theme="a"] .filter-btn{border-color:var(--border);background:var(--surface)}
+[data-theme="a"] .filter-btn.active{background:#E3350D;border-color:#E3350D;color:#fff}
+[data-theme="a"] .pokemon-header{border-color:var(--border);background:var(--surface);
+  border-left:3px solid #E3350D}
+[data-theme="a"] .card{background:var(--surface);border-color:transparent}
+[data-theme="a"] .card-img{background:#1a1a2a}
+[data-theme="a"] .progress-fill{background:linear-gradient(90deg,#E3350D,var(--budget))}
+[data-theme="a"] .rarity-name{color:#FF6B4A}
+[data-theme="a"] .header-icon-btn{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6)}
+[data-theme="a"] .reset-btn{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6)}
+[data-theme="a"] .budget-limit{color:rgba(255,255,255,.7)}
+[data-theme="a"] .pokemon-header .progress-badge{background:#2a2a40}
+[data-theme="a"] .bonus-divider{background:linear-gradient(90deg,#3a1a2a,#2a1a3a);border-color:#4a2a3a;color:#ff9a9a}
+[data-theme="a"] .sealed-item{border-bottom-color:#2a2a40}
+[data-theme="a"] .filter-divider{background:rgba(255,255,255,.2)}
+[data-theme="a"] .confirm-modal,.price-modal{border-color:#E3350D}
+
+/* ========================================
+   THEME B: LIGHT POKEDEX
+   ======================================== */
+[data-theme="b"]{
+  --bg:#F0EDE6;--surface:#FFFFFF;--card:#f8f8f8;
+  --accent:#E3350D;--text:#2D2D2D;--text-dim:#6B7280;
+  --bought:#d4edda;--high:#DC2626;--mid:#D97706;--budget:#16A34A;
+  --border:#D1D5DB;
+}
+[data-theme="b"] html,[data-theme="b"]{background:var(--bg)}
+[data-theme="b"] .header{
+  background:linear-gradient(180deg,#E3350D 0%,#B91C1C 100%);
+  border-bottom:3px solid #991B1B;
+  box-shadow:0 4px 20px rgba(0,0,0,.3)}
+[data-theme="b"] .header h1{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+[data-theme="b"] .budget-spent{color:#fff}
+[data-theme="b"] .budget-spent span{color:#FFD700}
+[data-theme="b"] .budget-count{color:rgba(255,255,255,.8)}
+[data-theme="b"] .budget-limit{color:rgba(255,255,255,.8)}
+[data-theme="b"] .header-icon-btn{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)}
+[data-theme="b"] .header-icon-btn.active{border-color:#FFD700;color:#FFD700}
+[data-theme="b"] .reset-btn{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)}
+[data-theme="b"] .progress-track{background:rgba(255,255,255,.2)}
+[data-theme="b"] .progress-fill{background:linear-gradient(90deg,#FFD700,#16A34A)}
+[data-theme="b"] .indicator-lights{display:flex !important}
+[data-theme="b"] .pokedex-lens{display:flex !important}
+
+/* Content area */
+[data-theme="b"] .sealed{background:#fff;border-color:var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,.08)}
+[data-theme="b"] .sealed-toggle{color:#E3350D}
+[data-theme="b"] .sealed-item{border-bottom-color:#E5E7EB}
+[data-theme="b"] .sealed-item .label{color:var(--text-dim)}
+[data-theme="b"] .sealed-warn{color:#DC2626}
+[data-theme="b"] .rarity-name{color:#E3350D}
+[data-theme="b"] .rarity-desc{color:var(--text)}
+
+[data-theme="b"] .search-bar input{background:#fff;border-color:var(--border);color:var(--text)}
+[data-theme="b"] .search-bar input:focus{border-color:#E3350D}
+[data-theme="b"] .search-bar input::placeholder{color:#9CA3AF}
+
+[data-theme="b"] .filter-btn{background:#fff;border-color:var(--border);color:var(--text-dim)}
+[data-theme="b"] .filter-btn.active{background:#E3350D;border-color:#E3350D;color:#fff}
+[data-theme="b"] .filter-divider{background:#D1D5DB}
+
+[data-theme="b"] .pokemon-header{background:#fff;border-color:var(--border);
+  border-left:3px solid #E3350D;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme="b"] .pokemon-header .name{color:var(--text)}
+[data-theme="b"] .pokemon-header .progress-badge{background:#F3F4F6;color:var(--text-dim)}
+[data-theme="b"] .pokemon-header .progress-badge.done{background:#D1FAE5;color:#16A34A}
+[data-theme="b"] .pokemon-header .chevron{color:#9CA3AF}
+
+[data-theme="b"] .card{background:#fff;border-color:#E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme="b"] .card-img{background:#F3F4F6}
+[data-theme="b"] .card-name{color:var(--text)}
+[data-theme="b"] .card-set{color:var(--text-dim)}
+[data-theme="b"] .card-note{color:#D97706}
+[data-theme="b"] .card-price{color:var(--text)}
+[data-theme="b"] .card.bought{background:#D1FAE5;border-color:#16A34A;opacity:.8}
+[data-theme="b"] .card.bought::after{color:#16A34A}
+
+[data-theme="b"] .bonus-divider{background:linear-gradient(90deg,#FEE2E2,#EFF6FF);
+  border-color:#FECACA;color:#B91C1C}
+
+[data-theme="b"] .confirm-overlay .confirm-modal,
+[data-theme="b"] .price-overlay .price-modal{
+  background:#fff;border-color:#E3350D;color:var(--text)}
+[data-theme="b"] .confirm-modal h3,[data-theme="b"] .price-modal h3{color:#E3350D}
+[data-theme="b"] .confirm-modal p,[data-theme="b"] .price-modal .card-label{color:var(--text-dim)}
+[data-theme="b"] .confirm-modal input,[data-theme="b"] .price-modal input{
+  background:#F9FAFB;border-color:var(--border);color:var(--text)}
+[data-theme="b"] .btn-cancel{background:#F3F4F6;color:var(--text-dim)}
+
+[data-theme="b"] .jump-top{background:#E3350D;color:#fff}
+
+/* === POKEDEX DECORATIVE ELEMENTS === */
+.indicator-lights{display:none;gap:5px;align-items:center}
+.indicator-lights span{width:8px;height:8px;border-radius:50%;display:block}
+.indicator-lights .light-r{background:#EF4444;box-shadow:0 0 4px #EF4444}
+.indicator-lights .light-y{background:#F59E0B;box-shadow:0 0 4px #F59E0B}
+.indicator-lights .light-g{background:#22C55E;box-shadow:0 0 4px #22C55E}
+
+.pokedex-lens{display:none;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#93C5FD,#3B82F6,#1D4ED8);
+  border:3px solid #E5E7EB;box-shadow:0 0 8px rgba(59,130,246,.5),inset 0 0 6px rgba(255,255,255,.3);
+  flex-shrink:0}
+
+.theme-toggle{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);
+  font-size:.65rem;padding:2px 8px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.theme-toggle:active{opacity:.7}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>⚡ Pok&eacute;mon Card Show ⚡</h1>
+  <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px">
+    <div class="pokedex-lens"></div>
+    <div class="indicator-lights">
+      <span class="light-r"></span>
+      <span class="light-y"></span>
+      <span class="light-g"></span>
+    </div>
+    <h1 style="margin:0;flex:1">⚡ Pok&eacute;mon Card Show ⚡</h1>
+    <button class="theme-toggle" onclick="cycleTheme()">Theme</button>
+  </div>
   <div class="budget-bar">
     <div class="budget-spent">$<span id="totalSpent">0</span><span id="budgetCap"></span></div>
     <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
@@ -246,6 +388,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   </div>
   <div class="header-actions">
     <span class="budget-limit" onclick="openBudgetModal()">Set Budget</span>
+    <button class="header-icon-btn" id="expandBtn" onclick="expandAll()" title="Expand/Collapse All">⤢</button>
+    <button class="header-icon-btn" id="reorderBtn" onclick="toggleReorder()" title="Reorder">↕</button>
     <button class="reset-btn" onclick="openResetModal()">Reset All</button>
   </div>
 </div>
@@ -304,12 +448,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 
 <script src="cards.js"></script>
 <script>
+// ===== THEME =====
+const themes = ['a', 'b']; // dark pokedex, light pokedex
+const themeLabels = ['Dark Dex', 'Light Dex'];
+let savedTheme = localStorage.getItem('pokeTheme') || 'a';
+if (savedTheme === '') savedTheme = 'a'; // migrate from original theme
+let currentThemeIdx = themes.indexOf(savedTheme);
+if (currentThemeIdx < 0) currentThemeIdx = 0;
+applyTheme();
+
+function applyTheme() {
+  const t = themes[currentThemeIdx];
+  document.body.setAttribute('data-theme', t);
+  document.documentElement.style.background = getComputedStyle(document.body).getPropertyValue('--bg');
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) btn.textContent = themeLabels[currentThemeIdx];
+}
+function cycleTheme() {
+  currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+  localStorage.setItem('pokeTheme', themes[currentThemeIdx]);
+  applyTheme();
+  // Force html background update
+  setTimeout(() => {
+    const bg = getComputedStyle(document.body).getPropertyValue('--bg').trim();
+    document.documentElement.style.background = bg;
+  }, 10);
+}
+
 // ===== STATE =====
 // bought stores either true (legacy) or a number (actual price paid)
 let bought = JSON.parse(localStorage.getItem('pokeBought') || '{}');
 let openSections = JSON.parse(sessionStorage.getItem('pokeOpen') || '{}');
 let budgetLimit = JSON.parse(localStorage.getItem('pokeBudget') || 'null');
 let filter = 'all';
+let typeFilter = 'all';
 let searchQuery = '';
 let reorderMode = false;
 let pendingPi = null, pendingCi = null;
@@ -507,6 +679,11 @@ function setFilter(f) {
   render();
 }
 
+function setTypeFilter(t) {
+  typeFilter = t;
+  render();
+}
+
 function onSearch(val) {
   searchQuery = val.toLowerCase().trim();
   render();
@@ -516,11 +693,12 @@ function render() {
   const app = document.getElementById('app');
   let html = '';
 
-  // Sealed product reference
+  // Sealed product reference + Rarity dictionary (side by side)
   html += `
+  <div class="ref-row">
   <div class="sealed" id="sealedSection">
     <button class="sealed-toggle" onclick="document.getElementById('sealedSection').classList.toggle('open')">
-      📦 Sealed Product Quick Reference
+      📦 Sealed
     </button>
     <div class="sealed-body">
       <div class="sealed-item"><span class="label">Booster Pack (single)</span><span class="price">$3.50 – $4.00</span></div>
@@ -528,13 +706,10 @@ function render() {
       <div class="sealed-item"><span class="label">Elite Trainer Box</span><span class="price">$35 – $40</span></div>
       <div class="sealed-warn">💰 Always offer cash! Avoid Evolving Skies, 151, and Paldean Fates (premium prices).</div>
     </div>
-  </div>`;
-
-  // Rarity dictionary
-  html += `
+  </div>
   <div class="sealed" id="raritySection">
     <button class="sealed-toggle" onclick="document.getElementById('raritySection').classList.toggle('open')">
-      📖 Rarity Dictionary
+      📖 Rarity
     </button>
     <div class="sealed-body">
       <div class="sealed-item" style="flex-direction:column;gap:2px">
@@ -568,6 +743,7 @@ function render() {
         <div class="rarity-price" style="color:var(--high)">$40.00 – $200+</div>
       </div>
     </div>
+  </div>
   </div>`;
 
   // Search bar
@@ -576,17 +752,23 @@ function render() {
     <input type="text" id="searchInput" placeholder="Search Pokémon, cards, sets..." value="${searchQuery}" oninput="onSearch(this.value)">
   </div>`;
 
-  // Filter bar + expand/collapse
-  const allOpen = POKEMON.every((_, pi) => openSections[pi]);
+  // Combined filter pill bar (tier + divider + type)
   html += `
   <div class="filter-bar">
-    <button class="filter-btn ${filter==='all'?'active':''}" data-filter="all" onclick="setFilter('all')">All</button>
-    <button class="filter-btn ${filter==='high'?'active':''}" data-filter="high" onclick="setFilter('high')">High End</button>
-    <button class="filter-btn ${filter==='mid'?'active':''}" data-filter="mid" onclick="setFilter('mid')">Mid-Tier</button>
-    <button class="filter-btn ${filter==='budget'?'active':''}" data-filter="budget" onclick="setFilter('budget')">Budget</button>
-    <button class="filter-btn ${filter==='remaining'?'active':''}" data-filter="remaining" onclick="setFilter('remaining')">Remaining</button>
-    <button class="expand-btn" onclick="expandAll()">${allOpen ? 'Collapse All' : 'Expand All'}</button>
-    <button class="reorder-btn ${reorderMode ? 'active' : ''}" onclick="toggleReorder()">${reorderMode ? '✓ Done' : '↕ Reorder'}</button>
+    <button class="filter-btn ${filter==='all'?'active':''}" onclick="setFilter('all')">All</button>
+    <button class="filter-btn ${filter==='high'?'active':''}" onclick="setFilter('high')">High End</button>
+    <button class="filter-btn ${filter==='mid'?'active':''}" onclick="setFilter('mid')">Mid-Tier</button>
+    <button class="filter-btn ${filter==='budget'?'active':''}" onclick="setFilter('budget')">Budget</button>
+    <button class="filter-btn ${filter==='remaining'?'active':''}" onclick="setFilter('remaining')">Remaining</button>
+    <span class="filter-divider"></span>
+    <button class="filter-btn ${typeFilter==='all'?'active':''}" onclick="setTypeFilter('all')">All Types</button>
+    <button class="filter-btn ${typeFilter==='ir'?'active':''}" onclick="setTypeFilter('ir')">IR</button>
+    <button class="filter-btn ${typeFilter==='fullart'?'active':''}" onclick="setTypeFilter('fullart')">Full Art</button>
+    <button class="filter-btn ${typeFilter==='tg'?'active':''}" onclick="setTypeFilter('tg')">TG</button>
+    <button class="filter-btn ${typeFilter==='holo'?'active':''}" onclick="setTypeFilter('holo')">Holo</button>
+    <button class="filter-btn ${typeFilter==='reverseholo'?'active':''}" onclick="setTypeFilter('reverseholo')">Rev Holo</button>
+    <button class="filter-btn ${typeFilter==='shiny'?'active':''}" onclick="setTypeFilter('shiny')">Shiny</button>
+    <button class="filter-btn ${typeFilter==='exv'?'active':''}" onclick="setTypeFilter('exv')">ex/V</button>
   </div>`;
 
   // Pokémon sections (in custom order)
@@ -612,11 +794,12 @@ function render() {
           (c.note && c.note.toLowerCase().includes(searchQuery));
         if (!cardMatch) return false;
       }
-      if (filter === 'remaining') return !bought[cardId(pi, ci)];
-      if (filter !== 'all') return c.tier === filter;
+      if (filter === 'remaining' && bought[cardId(pi, ci)]) return false;
+      if (filter !== 'all' && filter !== 'remaining' && c.tier !== filter) return false;
+      if (typeFilter !== 'all' && c.type !== typeFilter) return false;
       return true;
     });
-    if (filteredCards.length === 0 && (filter !== 'all' || searchQuery)) return;
+    if (filteredCards.length === 0 && (filter !== 'all' || typeFilter !== 'all' || searchQuery)) return;
 
     const stats = getSectionStats(pi);
     // Auto-expand sections when searching by card-level match
@@ -660,6 +843,16 @@ function render() {
 
   app.innerHTML = html;
   updateHeader();
+
+  // Update header icon button states
+  const expandBtn = document.getElementById('expandBtn');
+  const reorderBtn = document.getElementById('reorderBtn');
+  const allOpen = POKEMON.every((_, pi) => openSections[pi]);
+  if (expandBtn) expandBtn.textContent = allOpen ? '⊟' : '⊞';
+  if (reorderBtn) {
+    reorderBtn.classList.toggle('active', reorderMode);
+    reorderBtn.textContent = reorderMode ? '✓' : '↕';
+  }
 
   // Re-focus search input if it was focused
   if (document.activeElement && document.activeElement.tagName === 'BODY') {
