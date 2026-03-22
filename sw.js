@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pokemon-card-show-v5';
+const CACHE_NAME = 'pokemon-card-show-v6';
 
 // Install: cache the HTML page, card data, and manifest
 self.addEventListener('install', e => {
@@ -23,7 +23,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   // Card images: cache-first (they never change)
-  if (url.hostname === 'images.pokemontcg.io') {
+  if (url.hostname === 'images.pokemontcg.io' || url.hostname === 'raw.githubusercontent.com') {
     e.respondWith(
       caches.open(CACHE_NAME).then(cache =>
         cache.match(e.request).then(cached => {

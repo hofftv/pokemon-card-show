@@ -48,10 +48,14 @@ Hoff is NOT a coder. He's a creative director. Show a plan, get approval, then b
 - GitHub: https://github.com/hofftv/pokemon-card-show
 
 ### Card data model
-Each card in `cards.js` has:
-- `tier`: "high" / "mid" / "budget"
-- `type`: "ir" / "fullart" / "tg" / "holo" / "reverseholo" / "shiny" / "exv"
-- `name`, `set`, `price` [min, max], `note` (optional), `img` (URL)
+Each Pokémon entry in `cards.js` has:
+- `name`: display name (e.g. "Dratini, Dragonair & Dragonite")
+- `dexNum`: Pokédex number for the sprite image (base form for evolution families). Sprites load from PokeAPI: `SPRITE_URL + dexNum + '.png'`
+- `warn` (optional): warning text shown in header
+- `cards[]`: array of card objects, each with:
+  - `tier`: "high" / "mid" / "budget"
+  - `type`: "ir" / "fullart" / "tg" / "holo" / "reverseholo" / "shiny" / "exv"
+  - `name`, `set`, `price` [min, max], `note` (optional), `img` (URL)
 
 ### How to update cards
 1. Edit `cards.js` — add/remove/modify card objects
@@ -59,4 +63,4 @@ Each card in `cards.js` has:
 3. Or push to GitHub (auto-deploys via Vercel)
 
 ### How to update the service worker cache
-Bump the version number in `sw.js` (e.g. `pokemon-card-show-v5` → `v6`) to force users to get fresh files.
+Bump the version number in `sw.js` (e.g. `pokemon-card-show-v6` → `v7`) to force users to get fresh files.
