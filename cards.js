@@ -1,7 +1,7 @@
 // ===== POKÉMON CARD SHOW — CARD DATA =====
 // Last updated: 2026-03-21 (V5 — replaced emoji with Pokédex sprites)
 
-const SPRITE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const SPRITE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/';
 //
 // HOW TO UPDATE THIS FILE:
 // 1. Each Pokémon is an object with: name, dexNum (Pokédex number for sprite), warn (optional), cards[]
